@@ -1,1 +1,12 @@
 .venv
+benchmarks/finesse/additional_model_eval/cultura-en-l16-srs-weak
+benchmarks/finesse/additional_model_eval/wikipedia-en-l15-rss
+benchmarks/finesse/model_eval_baseline
+benchmarks/finesse/model_eval
+benchmarks/finesse/model_eval_pt/model_eval_pt_0
+benchmarks/finesse/model_eval_pt/model_eval_pt_1
+benchmarks/finesse/model_eval_pt/model_eval_pt_2
+benchmarks/finesse/model_eval_pt/model_eval_pt_3
+benchmarks/lemb/model_eval_2
+benchmarks/lemb/model_eval_baseline
+/evals

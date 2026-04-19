@@ -1,0 +1,5 @@
+faiss-cpu==1.13.2
+mteb==2.10.14
+pandas==3.0.2
+scikit-learn==1.8.0
+scipy==1.17.1

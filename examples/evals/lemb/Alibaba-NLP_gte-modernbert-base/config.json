@@ -1,0 +1,9 @@
+{
+    "model_name": "Alibaba-NLP/gte-modernbert-base",
+    "query_prefix": "",
+    "passage_prefix": "",
+    "max_ctx": 8190,
+    "is_instruct": false,
+    "pool_type": "cls",
+    "batch_size": 1
+}

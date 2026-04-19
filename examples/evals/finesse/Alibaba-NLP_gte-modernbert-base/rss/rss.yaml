@@ -1,0 +1,25 @@
+metric: rss
+formula: q1q3
+mode: native_mode
+models:
+  native_embedder:
+    name: Alibaba-NLP/gte-modernbert-base
+    max_context_length: 8190
+    prefix: ''
+    pool_type: cls
+datasets:
+- path: uonlp/CulturaX
+  split: train
+  data_files: en/en_part_0000*.parquet
+  text_column: text
+  commit_hash: 6a8734bc69fefcbb7735f4f9250f43e4cd7a442e
+probe_config:
+  sequence_length:
+    min: 4
+    max: 16
+  samples_per_length: 25
+  token_per_sample: 500
+  group_amount: 25
+advanced:
+  device: cuda
+seed: 42
