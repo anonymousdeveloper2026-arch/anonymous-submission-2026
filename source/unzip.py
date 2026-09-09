@@ -3,6 +3,7 @@ from pathlib import Path
 import os
 
 UNZIP_CHART = {
+    "rss-64" : "benchmarks/finesse/additional_model_eval/cultura-en-l64-rss.zip",
     "srs-16" : "benchmarks/finesse/additional_model_eval/cultura-en-l16-srs-weak.zip",
     "rss-wikipedia" : "benchmarks/finesse/additional_model_eval/wikipedia-en-l15-rss.zip",
     "finesse-baseline" : "benchmarks/finesse/model_eval_baseline.zip",
@@ -16,6 +17,7 @@ UNZIP_CHART = {
 }
 
 MV_CHART = {
+    "evals/special/rss-64" : "benchmarks/finesse/additional_model_eval/cultura-en-l64-rss",
     "evals/special/srs-16" : "benchmarks/finesse/additional_model_eval/cultura-en-l16-srs-weak",
     "evals/special/rss-wikipedia" : "benchmarks/finesse/additional_model_eval/wikipedia-en-l15-rss",
     "evals/typical/finesse/model_eval/finesse-baseline" : "benchmarks/finesse/model_eval_baseline",

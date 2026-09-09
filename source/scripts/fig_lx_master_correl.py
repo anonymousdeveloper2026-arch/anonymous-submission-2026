@@ -244,10 +244,11 @@ def _render_single_plot(ax, data_dict: Dict[str, pd.DataFrame], metric_type: str
 
     # Labels
     ylabel = 'Pearson r' if metric_type == 'pearson' else 'Spearman ρ'
-    ax.set_xlabel('Sequence Length (L)', fontsize=13, fontweight='bold')
-    ax.set_ylabel(ylabel, fontsize=13, fontweight='bold')
-    ax.legend(loc='upper left', fontsize=10, ncol=1, framealpha=0.95)
+    ax.set_xlabel('Sequence Length (L)', fontsize=18, fontweight='bold')
+    ax.set_ylabel(ylabel, fontsize=18, fontweight='bold')
+    ax.legend(loc='upper left', fontsize=18, ncol=2, framealpha=0.95)
     ax.grid(True, alpha=0.25, linestyle='-', linewidth=0.5)
+    ax.tick_params(labelsize=20)
 
     # Set limits
     if all_r_values:

@@ -1,4 +1,5 @@
 import json
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -46,15 +47,16 @@ def plot_rss_metric(data: dict, metric_name: str, output_path: str,
     
     # Configure axes
     if 'latency' in metric_name.lower():
-        plt.ylabel(f'{metric_name} (ms, Lower is better)', fontsize=12)
+        plt.ylabel(f'{metric_name} (ms, Lower is better)', fontsize=16)
         plt.yscale('log')
         plt.ylim((0.1, 5000))
         plt.yticks([1, 10, 100, 1000])
     else:
-        plt.ylabel(f'{metric_name} (Higher is better)', fontsize=12)
+        plt.ylabel(f'{metric_name} (Higher is better)', fontsize=16)
         plt.ylim((-50, 550))
-    
-    plt.xlabel('Sequence Length (tokens)', fontsize=12)
+    plt.xticks(fontsize=16)
+    plt.yticks(fontsize=16)
+    plt.xlabel('Number of Atoms (L, 500 tokens each)', fontsize=16)
     plt.grid(True, linestyle='--', alpha=0.6)
     
     # Add watermark (use alias if available)
@@ -170,12 +172,14 @@ def plot_srs_heatmap(data: dict, output_path: str, model_name: str = None,
                      vmin=-limit, vmax=limit, 
                      xticklabels=range(max_pos),
                      yticklabels=sorted_probe_lens,
-                     annot_kws={'size': 12},
+                     annot_kws={'size': 14},
                      cbar_kws={'label': 'Mean Score'})
     
     # plt.title(title, fontsize=14, fontweight='bold', pad=20)
-    plt.xlabel('Probe Position Index', fontsize=12)
-    plt.ylabel('Probe Length', fontsize=12)
+    plt.xticks(fontsize=16)
+    plt.yticks(fontsize=16)
+    plt.xlabel('Probe Position Index', fontsize=16)
+    plt.ylabel('Probe Length', fontsize=16)
     
     # Add hatching and text overlay for non-significant cells (only if p_thresh is set)
     if p_thresh is not None:
@@ -192,7 +196,7 @@ def plot_srs_heatmap(data: dict, output_path: str, model_name: str = None,
                     cell_val = result_matrix[r_idx, c_idx]
                     if not np.isnan(cell_val):
                         ax.text(c_idx + 0.5, r_idx + 0.5, f"{cell_val:.2f}",
-                                ha='center', va='center', fontsize=12,
+                                ha='center', va='center', fontsize=14,
                                 color='black',
                                 bbox=dict(boxstyle='round,pad=0.15', 
                                           facecolor='white', edgecolor='none', alpha=0.9),

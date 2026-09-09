@@ -204,10 +204,11 @@ def plot_correlation_stability(df: pd.DataFrame, output_path: str):
             color='darkred', linestyle=':', linewidth=2,
             label=f'not-ablated ρ={baseline["spearman_r"]:.3f}')
 
-    ax.set_ylabel('Correlation', fontsize=12, fontweight='bold')
+    ax.set_ylabel('Correlation', fontsize=16, fontweight='bold')
     ax.grid(True, alpha=0.3, axis='y')
     ax.set_ylim([0.3, 0.8])
-    ax.legend(fontsize=10, loc='lower right')
+    ax.legend(fontsize=16, loc='lower right')
+    ax.tick_params(labelsize=16)
 
     plt.tight_layout()
     plt.savefig(output_path, format='svg', dpi=300, bbox_inches='tight')
@@ -251,11 +252,12 @@ def plot_pvalue_significance(df: pd.DataFrame, output_path: str):
     ax.fill_between([0.5, 2.5], 0, 0.05, alpha=0.1, color='green')
 
     ax.set_xticks(positions)
-    ax.set_xticklabels(labels, fontsize=11)
-    ax.set_ylabel('p-value', fontsize=12, fontweight='bold')
+    ax.tick_params(labelsize=16)
+    ax.set_xticklabels(labels, fontsize=16)
+    ax.set_ylabel('p-value', fontsize=16, fontweight='bold')
     ax.set_ylim([0, 0.075])
     ax.grid(True, alpha=0.3, axis='y')
-    ax.legend(fontsize=10, loc='upper right')
+    ax.legend(fontsize=16, loc='upper right')
 
     plt.tight_layout()
     plt.savefig(output_path, format='svg', dpi=300, bbox_inches='tight')

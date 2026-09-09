@@ -38,3 +38,11 @@ We evaluated additional method.
 no model list changed, but evaluation method was varied for those experiements.
 
 additional baseline model should NOT be treated as the single transformer model evaluation result.
+
+### 2026-09-10 : Additional Experiments Added
+
+We evaluated additional method.
+
+- `additional_model_eval/cultura-en-l64-rss.zip` : We did RSS(L=4, 8, ..., 64), which was RSS(L=4, 5, ..., 16).
+
+no model list changed, but evaluation method was varied for those experiements. also, the package `package/finesse-values` was created to proceed this experiment. Detailed changes will be introduced in `README.md`. 

@@ -12,6 +12,8 @@ from scripts.tbl7_quadrant_analysis import generate_table_7_analysis
 from scripts.tbl10_td_bu_rss_correl import generate_table_10_tdburss_analysis
 from scripts.tbl11_lemb_iqr import generate_table_11_lemb_iqr
 from scripts.tbl16_welch_ttest import generate_table_16_welch_ttest
+from scripts.tbl_time_cost import generate_table_time_cost
+from scripts.tbl_dim_ablation import generate_tbl_dim_partial_correl, MODEL_DIM_PARAMS
 
 from scripts.fig_srs_rss import generate_srs_rss_figures
 from scripts.fig_rank_heatmap import generate_rank_heatmap
@@ -60,6 +62,7 @@ def save_artifacts(output_dir: str, raw_data, latex_table: str, md_table: str):
 
 # ======== CONFIGURATION =========
 
+
 BASELINE_MODEL_NAME = "average-synth"
 
 BENCHMARK_EVALS_DIR = "evals/typical"
@@ -69,6 +72,8 @@ LEMB_EVALS_DIR = "evals/typical/lemb"
 SRS16_DIR = "evals/special/srs-16"
 
 WIKIPEDIA_RSS15_DIR = "evals/special/rss-wikipedia"
+
+RSS64_DIR = "evals/special/rss-64"
 
 FINESSE_PT_FILES_DIR = "evals/typical/finesse/model_eval_pt"
 FINESSE_SRS_QWEN_PATH = f"{FINESSE_PT_FILES_DIR}/finesse-pt-2/Qwen_Qwen3-Embedding-0.6B/srs/embeddings_native_mode_srs_Qwen_Qwen3-Embedding-0.6B.pt"
@@ -188,6 +193,16 @@ TBL_14_CONFIG = {
     "groups": None
 }
 
+TBL_RSS64_CONFIG = {
+    "heatmap": {"enabled": True},
+    "columns": {
+        "target_lengths": [8, 16, 24, 32, 40, 48, 56, 64],
+        "show_avg": False,
+        "avg_range": []
+    },
+    "groups": None
+}
+
 TBL_15_CONFIG = {
     "heatmap": {"enabled": True},
     "models": "all"
@@ -197,6 +212,13 @@ TBL_16_CONFIG = {
     'exclude_models': [BASELINE_MODEL_NAME],
     'alpha': 0.05,
 }
+
+TBL_DIM_CONFIG = {
+    'target_lengths': list(range(4, 17)),
+    'exclude_models': [BASELINE_MODEL_NAME],
+    'dim_params_map': MODEL_DIM_PARAMS,
+}
+
 
 FIG_SRS_RSS_CONFIG = {
     "aliases": {"annamodels_LGAI-Embedding-Preview": "LGAI-Embedding-Preview", "Salesforce_SFR-Embedding-Mistral": "SFR-Embedding-Mistral", "Salesforce_SFR-Embedding-2_R": "SFR-Embedding-2_R", "Haon-Chen_speed-embedding-7b-instruct": "speed-embedding-7b-instruct", "sbintuitions_sarashina-embedding-v1-1b": "sarashina-embedding-v1-1b", "zeta-alpha-ai_Zeta-Alpha-E5-Mistral": "Zeta-Alpha-E5-Mistral", "Linq-Al-Research_Linq-Embed-Mistral": "Linq-Embed-Mistral", "jinaai_jina-embeddings-v5-text-nano": "jina-embeddings-v5-text-nano", "jinaai_jina-embeddings-v5-text-small": "jina-embeddings-v5-text-small", "codefuse-ai_F2LLM-0.6B": "F2LLM-0.6B", "codefuse-ai_F2LLM-1.7B": "F2LLM-1.7B", "Qwen_Qwen3-Embedding-0.6B": "Qwen3-Embedding-0.6B", "nomic-ai_nomic-embed-text-v1": "nomic-embed-text-v1", "BAAI_bge-m3": "bge-m3", "ibm-granite_granite-embedding-english-r2": "granite-embedding-english-r2", "ibm-granite_granite-embedding-small-english-r2": "granite-embedding-small-english-r2", "bflhc_Octen-Embedding-8B": "Octen-Embedding-8B", "Qwen_Qwen3-Embedding-4B": "Qwen3-Embedding-4B", "codefuse-ai_F2LLM-4B": "F2LLM-4B", "BAAI_bge-m3-unsupervised": "bge-m3-unsupervised", "bflhc_Octen-Embedding-0.6B": "Octen-Embedding-0.6B", "codefuse-ai_F2LLM-v2-0.6B": "F2LLM-v2-0.6B", "Alibaba-NLP_gte-modernbert-base": "gte-modernbert-base", "Qwen_Qwen3-Embedding-8B": "Qwen3-Embedding-8B", "nvidia_llama-embed-nemotron-8b": "llama-embed-nemotron-8b", "Snowflake_snowflake-arctic-embed-l-v2.0": "snowflake-arctic-embed-l-v2.0", "nomic-ai_modernbert-embed-base": "modernbert-embed-base", "nomic-ai_nomic-embed-text-v1.5": "nomic-embed-text-v1.5", "codefuse-ai_F2LLM-v2-8B": "F2LLM-v2-8B", "codefuse-ai_F2LLM-v2-1.7B": "F2LLM-v2-1.7B", "codefuse-ai_F2LLM-v2-4B": "F2LLM-v2-4B", "bflhc_Octen-Embedding-4B": "Octen-Embedding-4B", "bflhc_MoD-Embedding": "MoD-Embedding", "ICT-TIME-and-Querit_BOOM_4B_v1": "BOOM_4B_v1"}
@@ -399,6 +421,19 @@ if __name__ == '__main__':
         save_artifacts(tbl14_output_dir, raw_data, latex_table, md_table)
         print(f"{'='*60}")
 
+    # TBL RSS64
+    tblrss64_output_dir = os.path.join(output_base_dir, "tbl_rss64")
+    if not os.path.exists(tblrss64_output_dir):
+        tblrss64_source = RSS64_DIR
+        print("=" * 60)
+        print("GENERATING TABLE rss64 (RSS Scores)")
+        print("=" * 60)
+        raw_data, latex_table, md_table = generate_table_1_rss(
+            tblrss64_source, TBL_RSS64_CONFIG)
+        print(f"SAVING ARTIFACTS to '{tblrss64_output_dir}':")
+        save_artifacts(tblrss64_output_dir, raw_data, latex_table, md_table)
+        print(f"{'='*60}")
+
     # TBL 15
     tbl15_output_dir = os.path.join(output_base_dir, "tbl_lembfull")
     if not os.path.exists(tbl15_output_dir):
@@ -423,6 +458,21 @@ if __name__ == '__main__':
             tbl16_source, TBL_16_CONFIG)
         print(f"SAVING ARTIFACTS to '{tbl16_output_dir}':")
         save_artifacts(tbl16_output_dir, raw_data, latex_table, md_table)
+        print(f"{'='*60}")
+
+    # TBL Time
+    tbltime_output_dir = os.path.join(output_base_dir, "tbl_time")
+    if not os.path.exists(tbltime_output_dir):
+        print("=" * 60)
+        print("GENERATING TABLE Time (Time-Consuming)")
+        print("=" * 60)
+        raw_data, latex_table, md_table = generate_table_time_cost(
+            BENCHMARK_EVALS_DIR,
+            {
+                'exclude_models': [BASELINE_MODEL_NAME]
+            })
+        print(f"SAVING ARTIFACTS to '{tbltime_output_dir}':")
+        save_artifacts(tbltime_output_dir, raw_data, latex_table, md_table)
         print(f"{'='*60}")
 
     # Figures
@@ -524,7 +574,7 @@ if __name__ == '__main__':
         print("GENERATING RSS Jackknife Figure")
         print("=" * 60)
         generate_rss_jackknife_figures(BENCHMARK_EVALS_DIR, fig_rss_jackknife_output_dir,
-                                 FIG_RSS_JACKKNIFE_CONFIG)
+                                       FIG_RSS_JACKKNIFE_CONFIG)
 
     # SRS Jackknife Figure
     fig_srs_jackknife_output_dir = os.path.join(
@@ -534,7 +584,18 @@ if __name__ == '__main__':
         print("GENERATING SRS Jackknife Figure")
         print("=" * 60)
         generate_srs_jackknife_figures(BENCHMARK_EVALS_DIR, fig_srs_jackknife_output_dir,
-                                 FIG_SRS_JACKKNIFE_CONFIG)
+                                       FIG_SRS_JACKKNIFE_CONFIG)
 
-
+    # RSS-DIM Retrieval Partial Correlation
+    tbl_rssdim_output_dir = os.path.join(
+        output_base_dir, "tbl_dim_partial_correl")
+    if not os.path.exists(tbl_rssdim_output_dir):
+        print("=" * 60)
+        print("GENERATING RSS-DIM: RSS-DIM Retrieval Partial Correlation")
+        print("=" * 60)
+        result = generate_tbl_dim_partial_correl(
+            BENCHMARK_EVALS_DIR, tbl_rssdim_output_dir,
+            TBL_DIM_CONFIG)
+        print(f"  \u2713 LaTeX table: {result.get('latex_path')}")
+        print("=" * 60)
     print(f"*** All artifacts saved to: {Path(output_base_dir).resolve()} ***")

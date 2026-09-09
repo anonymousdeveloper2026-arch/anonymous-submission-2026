@@ -186,7 +186,7 @@ def generate_l15_scatter_plot(model_data: Dict[str, Dict], task_short: str,
         if model == baseline_model:
             # Annotation for baseline
             plt.text(rss_values[i], lemb_values[i] - 0.02, "Baseline",
-                     fontsize=10, ha='center', fontweight='bold', color='black')
+                     fontsize=16, ha='center', fontweight='bold', color='black')
         elif model in aliases:
             # Aliased model annotation with matching color
             display_name = aliases[model]
@@ -211,7 +211,7 @@ def generate_l15_scatter_plot(model_data: Dict[str, Dict], task_short: str,
             
             plt.annotate(display_name,
                          (x_val, y_val),
-                         fontsize=12, alpha=0.9, fontweight='bold',
+                         fontsize=16, alpha=0.9, fontweight='bold',
                          xytext=(x_offset, y_offset), textcoords='offset points',
                          color=model_color,
                          arrowprops=dict(arrowstyle='-', color='gray', alpha=0.3))
@@ -223,18 +223,20 @@ def generate_l15_scatter_plot(model_data: Dict[str, Dict], task_short: str,
     plt.plot(x_line, p(x_line), "r--", alpha=0.5, label='Trend line')
 
     # Labels and title
-    plt.xlabel('RSS(L=15)', fontsize=12, fontweight='bold')
-    plt.ylabel(f'{task_short.lower()} Score', fontsize=12, fontweight='bold')
+    plt.xlabel('RSS(L=15)', fontsize=16, fontweight='bold')
+    plt.ylabel(f'{task_short.lower()} Score', fontsize=16, fontweight='bold')
 
     # Annotate with correlation coefficients (p-values in scientific notation)
     textstr = f'Pearson r = {pearson_r:.3f} (p = {_format_pvalue(pearson_p)})\n' \
         f'Spearman ρ = {spearman_r:.3f} (p = {_format_pvalue(spearman_p)})'
     props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
-    plt.text(0.05, 0.95, textstr, transform=plt.gca().transAxes, fontsize=10,
-             verticalalignment='top', bbox=props)
+    plt.text(0.59, 0.12, textstr, transform=plt.gca().transAxes, fontsize=16,
+             verticalalignment='bottom', bbox=props)
 
     plt.grid(True, linestyle='--', alpha=0.6)
-    plt.legend(loc='lower right')
+    plt.legend(loc='lower right', fontsize=16)
+    plt.xticks(fontsize=16)
+    plt.yticks(fontsize=16)
     plt.tight_layout()
 
     # Save as SVG

@@ -1,7 +1,7 @@
 import json
 import numpy as np
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 
 def extract_rss_for_tradeoff(data, model_name):
@@ -100,6 +100,59 @@ def process_rss_directory(directory, exclude_models=None):
     return all_models_data
 
 
+def _resolve_column_config(all_models_data: List[Dict], columns_config: Dict) -> Tuple[List[int], bool, List[int]]:
+    """Resolve target_lengths / show_avg / avg_lengths from config + data.
+
+    Priority & legacy compatibility:
+      - target_lengths: explicit config value is an override; otherwise the
+        common intersection of lengths across ALL models is used (grid-
+        agnostic: works with any irregular length set, e.g. [4,8,12,...,64]).
+      - show_avg: default True. False skips the Avg column entirely.
+      - avg lengths priority: "avg_over" (new) > "avg_range" (legacy) >
+        common lengths (auto). "avg_over" accepts "common", a list, or a
+        range. Legacy "avg_range" (e.g. range(4, 17)) keeps its exact
+        original behavior.
+    """
+    # Build lookup: model_name -> {length: rss_score}
+    model_lookup = {}
+    for model_data in all_models_data:
+        model_name = model_data["model_name"]
+        tradeoff_dict = {length: rss for length,
+                         rss, _ in model_data["model_raw_data"]}
+        model_lookup[model_name] = tradeoff_dict
+
+    # Common intersection of lengths across all models (grid-agnostic)
+    all_length_sets = [set(d.keys()) for d in model_lookup.values()]
+    common_lengths = sorted(set.intersection(*all_length_sets)) \
+        if all_length_sets else []
+
+    # target_lengths: explicit override, else auto intersection
+    if "target_lengths" in columns_config and columns_config["target_lengths"]:
+        target_lengths = list(columns_config["target_lengths"])
+    else:
+        target_lengths = common_lengths
+
+    # show_avg (default True for legacy compatibility)
+    show_avg = columns_config.get("show_avg", True)
+
+    # Avg length set priority: avg_over (new) > avg_range (legacy) > common
+    if not show_avg:
+        avg_lengths = []
+    elif "avg_over" in columns_config:
+        avg_over = columns_config["avg_over"]
+        if avg_over == "common" or avg_over is None:
+            avg_lengths = common_lengths
+        else:
+            avg_lengths = list(avg_over)
+    elif "avg_range" in columns_config:
+        # Legacy path: exact original behavior
+        avg_lengths = list(columns_config["avg_range"])
+    else:
+        avg_lengths = common_lengths
+
+    return target_lengths, show_avg, avg_lengths
+
+
 def _process_data_into_ir(all_models_data: List[Dict], table_config: Dict) -> List[Dict]:
     """
     Layer 2: Processing & Intermediate Representation.
@@ -107,11 +160,13 @@ def _process_data_into_ir(all_models_data: List[Dict], table_config: Dict) -> Li
     Transforms raw model data into a format-agnostic IR with computed values,
     best-score identification per column, and optional heatmap intensity data.
     """
-    target_lengths = table_config["columns"]["target_lengths"]
-    avg_range = table_config["columns"]["avg_range"]
     groups = table_config["groups"]
     heatmap_config = table_config.get("heatmap", {})
     heatmap_enabled = heatmap_config.get("enabled", False)
+
+    columns_config = table_config["columns"]
+    target_lengths, show_avg, avg_lengths = _resolve_column_config(
+        all_models_data, columns_config)
 
     # Build lookup: model_name -> {length: rss_score}
     model_lookup = {}
@@ -123,7 +178,7 @@ def _process_data_into_ir(all_models_data: List[Dict], table_config: Dict) -> Li
 
     # Collect all model rows
     model_rows = []
-    
+
     if groups is None:
         # Fallback: process all models as a single group with sorting
         for model_name in model_lookup.keys():
@@ -140,18 +195,23 @@ def _process_data_into_ir(all_models_data: List[Dict], table_config: Dict) -> Li
                 else:
                     row_data["values"][length] = None
 
-            # Calculate average over avg_range
-            avg_values = [tradeoff_dict[l]
-                          for l in avg_range if l in tradeoff_dict]
-            if avg_values:
-                row_data["values"]["avg"] = np.mean(avg_values)
-            else:
-                row_data["values"]["avg"] = None
+            # Calculate average over avg_lengths (skipped when show_avg=False)
+            if show_avg:
+                avg_values = [tradeoff_dict[l]
+                              for l in avg_lengths if l in tradeoff_dict]
+                if avg_values:
+                    row_data["values"]["avg"] = np.mean(avg_values)
+                else:
+                    row_data["values"]["avg"] = None
 
             model_rows.append(row_data)
-        
+
         # Sort model rows by average score (descending)
-        model_rows.sort(key=lambda r: r["values"].get("avg", float('-inf')), reverse=True)
+        if show_avg:
+            model_rows = [it for it in model_rows
+                          if it["values"].get("avg", float('-inf')) != None]
+            model_rows.sort(key=lambda r: r["values"].get(
+                "avg", float('-inf')), reverse=True)
     else:
         # Group-based iteration
         for group in groups:
@@ -176,21 +236,26 @@ def _process_data_into_ir(all_models_data: List[Dict], table_config: Dict) -> Li
                     else:
                         row_data["values"][length] = None
 
-                # Calculate average over avg_range
-                avg_values = [tradeoff_dict[l]
-                              for l in avg_range if l in tradeoff_dict]
-                if avg_values:
-                    row_data["values"]["avg"] = np.mean(avg_values)
-                else:
-                    row_data["values"]["avg"] = None
+                # Calculate average over avg_lengths (skipped when
+                # show_avg=False)
+                if show_avg:
+                    avg_values = [tradeoff_dict[l]
+                                  for l in avg_lengths if l in tradeoff_dict]
+                    if avg_values:
+                        row_data["values"]["avg"] = np.mean(avg_values)
+                    else:
+                        row_data["values"]["avg"] = None
 
                 model_rows.append(row_data)
 
-        # Sort model rows by average score (descending) - only for non-baseline groups
-        # Baseline entries stay at the bottom
+        # Sort model rows by average score (descending) - only for
+        # non-baseline groups. Baseline entries stay at the bottom.
         baseline_rows = [r for r in model_rows if r.get("is_baseline", False)]
-        non_baseline_rows = [r for r in model_rows if not r.get("is_baseline", False)]
-        non_baseline_rows.sort(key=lambda r: r["values"].get("avg", float('-inf')), reverse=True)
+        non_baseline_rows = [r for r in model_rows
+                             if not r.get("is_baseline", False)]
+        if show_avg:
+            non_baseline_rows.sort(key=lambda r: r["values"].get(
+                "avg", float('-inf')), reverse=True)
         model_rows = non_baseline_rows + baseline_rows
 
     # Build IR rows
@@ -213,7 +278,7 @@ def _process_data_into_ir(all_models_data: List[Dict], table_config: Dict) -> Li
             ir_rows.append(row)
 
     # Identify best scores per column (for bold formatting)
-    columns_to_check = target_lengths + ["avg"]
+    columns_to_check = target_lengths + (["avg"] if show_avg else [])
     for col in columns_to_check:
         col_values = [row["values"].get(col) for row in ir_rows
                       if row["type"] == "model_row" and row["values"].get(col) is not None]
@@ -250,14 +315,28 @@ def _process_data_into_ir(all_models_data: List[Dict], table_config: Dict) -> Li
     return ir_rows
 
 
-def _render_markdown(ir_rows: List[Dict], target_lengths: List[int]) -> str:
+def _avg_label(avg_lengths: List[int], latex: bool = False) -> str:
+    """Build the Avg column header from the actual avg length set."""
+    if not avg_lengths:
+        return "Avg"
+    lo, hi = min(avg_lengths), max(avg_lengths)
+    if latex:
+        return r"$\text{Avg}(L%d \dots L%d)$" % (lo, hi)
+    return "Avg(L%d..L%d)" % (lo, hi)
+
+
+def _render_markdown(ir_rows: List[Dict], target_lengths: List[int],
+                     show_avg: bool = True, avg_lengths: List[int] = None) -> str:
     """
     Layer 3a: Markdown Renderer.
     Produces a readable table for terminal output.
     """
+    if avg_lengths is None:
+        avg_lengths = list(range(4, 17))  # legacy default label fallback
     # Build header
-    header_cols = ["Model"] + \
-        [f"L={l}" for l in target_lengths] + ["Avg(L4..L16)"]
+    header_cols = ["Model"] + [f"L={l}" for l in target_lengths]
+    if show_avg:
+        header_cols.append(_avg_label(avg_lengths))
     lines = ["| " + " | ".join(header_cols) + " |"]
     lines.append("|" + "|".join(["-" * (len(c) + 2)
                  for c in header_cols]) + "|")
@@ -265,7 +344,7 @@ def _render_markdown(ir_rows: List[Dict], target_lengths: List[int]) -> str:
     for row in ir_rows:
         if row["type"] == "group_header":
             group_line = f"| *{row['group_name']}* |" + \
-                " |" * len(target_lengths) + " |"
+                " |" * (len(target_lengths) + (1 if show_avg else 0)) + " |"
             lines.append(group_line)
         else:  # model_row
             model_name = row["model_name"]
@@ -283,22 +362,24 @@ def _render_markdown(ir_rows: List[Dict], target_lengths: List[int]) -> str:
                 cells.append(cell)
 
             # Avg column
-            avg_val = row["values"].get("avg")
-            avg_is_best = row.get("is_best", {}).get("avg", False)
-            if avg_val is None:
-                avg_cell = "N/A"
-            else:
-                avg_cell = f"{avg_val:.2f}"
-                if avg_is_best:
-                    avg_cell = f"**{avg_cell}**"
-            cells.append(avg_cell)
+            if show_avg:
+                avg_val = row["values"].get("avg")
+                avg_is_best = row.get("is_best", {}).get("avg", False)
+                if avg_val is None:
+                    avg_cell = "N/A"
+                else:
+                    avg_cell = f"{avg_val:.2f}"
+                    if avg_is_best:
+                        avg_cell = f"**{avg_cell}**"
+                cells.append(avg_cell)
 
             lines.append("| " + " | ".join(cells) + " |")
 
     return "\n".join(lines)
 
 
-def _render_latex(ir_rows: List[Dict], target_lengths: List[int], config: Dict = None) -> str:
+def _render_latex(ir_rows: List[Dict], target_lengths: List[int], config: Dict = None,
+                  show_avg: bool = True, avg_lengths: List[int] = None) -> str:
     """
     Layer 3b: LaTeX Renderer.
     Produces a Booktabs-formatted LaTeX table for paper insertion.
@@ -306,8 +387,10 @@ def _render_latex(ir_rows: List[Dict], target_lengths: List[int], config: Dict =
     """
     # Check if heatmap mode is enabled
     heatmap_enabled = config.get('heatmap', {}).get('enabled', False) if config else False
+    if avg_lengths is None:
+        avg_lengths = list(range(4, 17))  # legacy default label fallback
     # Build column spec: l for model, c for each numeric column
-    col_spec = "l" + "c" * (len(target_lengths) + 1)
+    col_spec = "l" + "c" * (len(target_lengths) + (1 if show_avg else 0))
     lines = [
         r"\begin{table}[ht!]",
         r"\centering",
@@ -317,8 +400,9 @@ def _render_latex(ir_rows: List[Dict], target_lengths: List[int], config: Dict =
     ]
 
     # Header row
-    header_parts = [
-        "Model"] + [f"$L={l}$" for l in target_lengths] + [r"$\text{Avg}(L4 \dots L16)$"]
+    header_parts = ["Model"] + [f"$L={l}$" for l in target_lengths]
+    if show_avg:
+        header_parts.append(_avg_label(avg_lengths, latex=True))
     lines.append(" & ".join(header_parts) + r" \\")
     lines.append(r"\midrule")
 
@@ -330,7 +414,7 @@ def _render_latex(ir_rows: List[Dict], target_lengths: List[int], config: Dict =
                 lines.append(r"\midrule")
             first_group = False
 
-            n_cols = len(target_lengths) + 2  # Model + lengths + avg
+            n_cols = len(target_lengths) + (2 if show_avg else 1)  # Model + lengths (+ avg)
             group_name = row["group_name"]
             lines.append(
                 f"\\multicolumn{{{n_cols}}}{{l}}{{\\textit{{{group_name}}}}} \\\\")
@@ -346,12 +430,12 @@ def _render_latex(ir_rows: List[Dict], target_lengths: List[int], config: Dict =
                 val = row["values"].get(length)
                 is_best = row.get("is_best", {}).get(length, False)
                 intensity = row.get("heatmap_intensity", {}).get(length) if heatmap_enabled else None
-                
+
                 if val is None:
                     cell = "N/A"
                 else:
                     cell_content = f"{val:.2f}"
-                    
+
                     # Apply heatmap coloring if enabled
                     if heatmap_enabled and intensity is not None:
                         # Determine color based on value sign and intensity
@@ -364,40 +448,41 @@ def _render_latex(ir_rows: List[Dict], target_lengths: List[int], config: Dict =
                             cell = f"\\cellcolor{{blue!{blue_intensity}}}{cell_content}"
                     else:
                         cell = cell_content
-                    
+
                     # Apply bold formatting only when heatmap is disabled
                     if is_best and not heatmap_enabled:
                         cell = f"\\textbf{{{cell}}}"
-                
+
                 cells.append(cell)
 
             # Avg column
-            avg_val = row["values"].get("avg")
-            avg_is_best = row.get("is_best", {}).get("avg", False)
-            intensity_avg = row.get("heatmap_intensity", {}).get("avg") if heatmap_enabled else None
-            
-            if avg_val is None:
-                avg_cell = "N/A"
-            else:
-                cell_content = f"{avg_val:.2f}"
-                
-                # Apply heatmap coloring if enabled
-                if heatmap_enabled and intensity_avg is not None:
-                    if avg_val < 0:
-                        # Negative values: fixed red intensity
-                        avg_cell = f"\\cellcolor{{red!25}}{cell_content}"
-                    else:
-                        # Positive values: scaled blue (0-60 range for subtlety)
-                        blue_intensity = int(intensity_avg * 60)
-                        avg_cell = f"\\cellcolor{{blue!{blue_intensity}}}{cell_content}"
+            if show_avg:
+                avg_val = row["values"].get("avg")
+                avg_is_best = row.get("is_best", {}).get("avg", False)
+                intensity_avg = row.get("heatmap_intensity", {}).get("avg") if heatmap_enabled else None
+
+                if avg_val is None:
+                    avg_cell = "N/A"
                 else:
-                    avg_cell = cell_content
-                
-                # Apply bold formatting only when heatmap is disabled
-                if avg_is_best and not heatmap_enabled:
-                    avg_cell = f"\\textbf{{{avg_cell}}}"
-            
-            cells.append(avg_cell)
+                    cell_content = f"{avg_val:.2f}"
+
+                    # Apply heatmap coloring if enabled
+                    if heatmap_enabled and intensity_avg is not None:
+                        if avg_val < 0:
+                            # Negative values: fixed red intensity
+                            avg_cell = f"\\cellcolor{{red!25}}{cell_content}"
+                        else:
+                            # Positive values: scaled blue (0-60 range for subtlety)
+                            blue_intensity = int(intensity_avg * 60)
+                            avg_cell = f"\\cellcolor{{blue!{blue_intensity}}}{cell_content}"
+                    else:
+                        avg_cell = cell_content
+
+                    # Apply bold formatting only when heatmap is disabled
+                    if avg_is_best and not heatmap_enabled:
+                        avg_cell = f"\\textbf{{{avg_cell}}}"
+
+                cells.append(avg_cell)
 
             lines.append(" & ".join(cells) + r" \\")
 
@@ -426,10 +511,18 @@ def generate_table_1_rss(directory: str, table_config: Dict) -> str:
     if not all_models_data:
         return "No data found."
 
+    # Resolve column config once (shared by Layer 2 and Layer 3)
+    target_lengths, show_avg, avg_lengths = _resolve_column_config(
+        all_models_data, table_config["columns"])
+
     # Layer 2: Processing & IR
     ir_rows = _process_data_into_ir(all_models_data, table_config)
 
     # Layer 3: Rendering
-    target_lengths = table_config["columns"]["target_lengths"]
+    return all_models_data, \
+        _render_latex(ir_rows, target_lengths, table_config,
+                      show_avg=show_avg, avg_lengths=avg_lengths), \
+        _render_markdown(ir_rows, target_lengths,
+                         show_avg=show_avg, avg_lengths=avg_lengths)
 
-    return all_models_data, _render_latex(ir_rows, target_lengths, table_config), _render_markdown(ir_rows, target_lengths)
+

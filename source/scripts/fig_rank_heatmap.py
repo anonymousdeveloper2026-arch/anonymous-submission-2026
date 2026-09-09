@@ -80,12 +80,12 @@ def generate_rank_heatmap(input_parquet: str, output_dir: str) -> str:
     
     # Axis labels
     ax.set_xlabel(
-        "negative rank",
-        fontsize=11, fontweight="bold"
+        "positive rank",   
+        fontsize=18, fontweight="bold"
     )
     ax.set_ylabel(
-        "positive rank",
-        fontsize=11, fontweight="bold"
+        "negative rank",   
+        fontsize=18, fontweight="bold"
     )
     ax.set_xlim(0.5, max_rank_pos + 0.5)
     ax.set_ylim(0.5, max_rank_neg + 0.5)
@@ -99,6 +99,7 @@ def generate_rank_heatmap(input_parquet: str, output_dir: str) -> str:
         return list(range(1, max_rank + 1, step))
     ax.set_xticks(_ticks(max_rank_pos))
     ax.set_yticks(_ticks(max_rank_neg))
+    ax.tick_params(labelsize=16)
     
     plt.tight_layout()
     plt.savefig(output_file, format='svg', dpi=300, bbox_inches="tight")

@@ -214,11 +214,12 @@ def plot_correlation_stability_grid(results_dict: Dict[int, pd.DataFrame], outpu
                 color='darkred', linestyle=':', linewidth=1.5,
                 label=f'not-ablated ρ={baseline["spearman_r"]:.3f}')
 
-        ax.set_title(f'L={length}', fontsize=10, fontweight='bold')
-        ax.set_ylabel('Correlation', fontsize=9)
+        ax.set_title(f'L={length}', fontsize=16, fontweight='bold')
+        ax.set_ylabel('Correlation', fontsize=16)
+        ax.tick_params(labelsize=16)
         ax.grid(True, alpha=0.3, axis='y')
         ax.set_ylim([0.3, 0.8])
-        ax.legend(fontsize=8, loc='lower right')
+        ax.legend(fontsize=10, loc='upper right')
 
     # Hide unused subplots
     for idx in range(n_lengths, len(axes) if isinstance(axes, np.ndarray) else 1):
@@ -283,9 +284,10 @@ def plot_pvalue_significance_grid(results_dict: Dict[int, pd.DataFrame], output_
         ax.fill_between([0.5, 2.5], 0, 0.05, alpha=0.1, color='green')
 
         ax.set_xticks(positions)
-        ax.set_xticklabels(labels, fontsize=9)
-        ax.set_title(f'L={length}', fontsize=10, fontweight='bold')
-        ax.set_ylabel('p-value', fontsize=9)
+        ax.tick_params(labelsize=16)
+        ax.set_xticklabels(labels, fontsize=16)
+        ax.set_title(f'L={length}', fontsize=16, fontweight='bold')
+        ax.set_ylabel('p-value', fontsize=16)
         ax.set_ylim([0, 0.075])
         ax.grid(True, alpha=0.3, axis='y')
 

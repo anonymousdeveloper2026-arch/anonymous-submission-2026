@@ -153,8 +153,9 @@ def create_boxplot(task_scores: Dict[str, List[float]], output_path: str):
     )
 
     # Configure plot
-    ax.set_xlabel('', fontsize=12, fontweight='bold')
-    ax.set_ylabel('', fontsize=12, fontweight='bold')
+    ax.set_xlabel('', fontsize=16, fontweight='bold')
+    ax.set_ylabel('', fontsize=16, fontweight='bold')
+    ax.tick_params(labelsize=16)
     ax.set_ylim([0.0, 1.0])
     ax.grid(True, axis='y', alpha=0.3, linestyle='--')
     

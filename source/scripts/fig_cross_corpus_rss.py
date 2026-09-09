@@ -200,15 +200,16 @@ def generate_cross_corpus_figure(config: dict, output_dir: str) -> Tuple[str, st
              label='Perfect correlation (y=x)')
     
     # Labels and title
-    plt.xlabel(f'{corpus_a_name} RSS (L=15)', fontsize=12, fontweight='bold')
-    plt.ylabel(f'{corpus_b_name} RSS (L=15)', fontsize=12, fontweight='bold')
+    plt.xlabel(f'{corpus_a_name} RSS (L=15)', fontsize=16, fontweight='bold')
+    plt.ylabel(f'{corpus_b_name} RSS (L=15)', fontsize=16, fontweight='bold')
     
     # Annotate with correlation coefficients (p-values in scientific notation)
     textstr = f'Pearson r = {pearson_r:.3f} (p = {_format_pvalue(pearson_p)})\nSpearman ρ = {spearman_r:.3f} (p = {_format_pvalue(spearman_p)})'
     props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
-    plt.text(0.05, 0.95, textstr, transform=plt.gca().transAxes, fontsize=10,
+    plt.text(0.05, 0.95, textstr, transform=plt.gca().transAxes, fontsize=16,
              verticalalignment='top', bbox=props)
-    
+    plt.xticks(fontsize=16)
+    plt.yticks(fontsize=16)
     plt.grid(True, linestyle='--', alpha=0.6)
     plt.legend(loc='lower right')
     plt.tight_layout()

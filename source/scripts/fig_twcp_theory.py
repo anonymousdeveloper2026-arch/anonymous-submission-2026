@@ -130,7 +130,7 @@ def plot_twcp_3d(ax, probe_3d, pos_3d, neg_3d, cos_stats, title):
     ax.text(
         pos_mid[0], pos_mid[1], pos_mid[2],
         f" 1 - cos = {(1 - cos_stats['pos_mean']):.3f}",
-        color="navy", fontsize=10, fontweight="bold",
+        color="navy", fontsize=16, fontweight="bold",
         ha="center", va="center", zorder=20,
         bbox=dict(boxstyle="round,pad=0.25", facecolor="white",
                   edgecolor="navy", alpha=0.85, linewidth=0.8),
@@ -138,7 +138,7 @@ def plot_twcp_3d(ax, probe_3d, pos_3d, neg_3d, cos_stats, title):
     ax.text(
         neg_mid[0], neg_mid[1], neg_mid[2],
         f" 1 - cos = {(1 - cos_stats['neg_mean']):.3f}",
-        color="darkred", fontsize=10, fontweight="bold",
+        color="darkred", fontsize=16, fontweight="bold",
         ha="center", va="center", zorder=20,
         bbox=dict(boxstyle="round,pad=0.25", facecolor="white",
                   edgecolor="darkred", alpha=0.85, linewidth=0.8),
@@ -152,15 +152,15 @@ def plot_twcp_3d(ax, probe_3d, pos_3d, neg_3d, cos_stats, title):
     )
     ax.text2D(
         0.02, 0.98, info,
-        transform=ax.transAxes, fontsize=8, fontfamily="monospace",
+        transform=ax.transAxes, fontsize=16, fontfamily="monospace",
         verticalalignment="top",
         bbox=dict(boxstyle="round,pad=0.4", facecolor="lightyellow", alpha=0.9),
     )
 
-    ax.set_xlabel("PCA 1", fontsize=12)
-    ax.set_ylabel("PCA 2", fontsize=12)
-    ax.set_zlabel("PCA 3", fontsize=12)
-    ax.legend(loc="upper right", fontsize=8)
+    ax.set_xlabel("PCA 1", fontsize=16)
+    ax.set_ylabel("PCA 2", fontsize=16)
+    ax.set_zlabel("PCA 3", fontsize=16)
+    ax.legend(loc="upper right", fontsize=12)
 
 
 # =============================================================================
