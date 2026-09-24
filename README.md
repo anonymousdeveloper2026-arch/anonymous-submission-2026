@@ -32,32 +32,7 @@ pip install torch==2.10.0 torchvision==0.25.0 torchaudio==2.10.0 --index-url htt
     Executing the command above will automatically unzip all compressed files.
 2. Subsequently, the tables and figures from the paper are reconstructed on the fly based on the original evaluation results.
     - `python source/reproduce.py`
-3. The tables and figures will be generated in the `source/compiled` directory. Each file corresponds to the following items in the paper:
-    - `source/compiled/tbl_rss/table.tex` => Table 1
-    - `source/compiled/tbl_lemb/table.tex` => Table 2
-    - `source/compiled/tbl_rsslemb_correl/table.tex` => Table 9
-    - `source/compiled/tbl_srslemb_correl/table.tex` => Table 3
-    - `source/compiled/tbl_srslemb_correl/pearson_tbl/table.tex` => Table 4
-    - `source/compiled/tbl_srslemb_correl/spearman_tbl/table.tex` => Table 5
-    - `source/compiled/tbl_twcp/table.tex` => Table 6, 7, 8
-    - `source/compiled/tbl_tdbu/table.tex` => Table 10
-    - `source/compiled/tbl_lemb_iqr/table.tex` => Table 11
-    - `source/compiled/tbl_nomic/table.tex` => Table 12
-    - `source/compiled/tbl_f2llm/table.tex` => Table 13
-    - `source/compiled/tbl_rssfull/table.tex` => Table 14
-    - `source/compiled/tbl_lembfull/table.tex` => Table 15
-    - `source/compiled/tbl_ttest/table.tex` => Table 16
-    - Figure 2, 3, 12-20 => `source/compiled/fig_srs_rss/srs`
-    - Figure 21 => `source/compiled/fig_srs_rss/rss`
-    - Figure 1 => `source/compiled/fig_lx_master`
-    - Figure 4 => `source/compiled/fig_twcp_nemotron`, `source/compiled/fig_twcp_qwen`
-    - Figure 5 => `source/compiled/fig_crc_heatmap`
-    - Figure 6 => `source/compiled/fig_srs_16`
-    - Figure 7 => `source/compiled/fig_cross_corpus`
-    - Figure 8 => `source/compiled/fig_l15_lembtask`
-    - Figure 9 => `source/compiled/fig_lemb_statistic`
-    - Figure 10 => `source/compiled/fig_rss_jackknife`
-    - Figure 11 => `source/compiled/fig_srs_jackknife`
+3. The tables and figures will be generated in the `source/compiled` directory.
 
 ### How to Add Your Own Data Points
 
